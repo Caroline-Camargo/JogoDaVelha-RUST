@@ -8,7 +8,8 @@ Este é um simples jogo da velha implementado em Rust usando a biblioteca ggez p
 - O jogo termina quando um jogador vence ou o tabuleiro fica completamente preenchido.
 - Quando isso acontece é sinalizado na tela e basta clicar em qualquer lugar para o jogo automaticamente reiniciar 
 
-<img width="348" alt="image" src="https://github.com/Caroline-Camargo/JogoDaVelha-RUST/assets/88254161/7cff3722-e0c4-4873-9d8d-983468371c31">
+<img width="348" alt="image" src="https://github.com/Caroline-Camargo/JogoDaVelha-RUST/assets/88254161/7cff3722-e0c4-4873-9d8d-983468371c31"> <img width="419" alt="image" src="https://github.com/Caroline-Camargo/JogoDaVelha-RUST/assets/88254161/f600db1d-9e36-4cb9-8db7-2d11b930d624">
+
 
 
 ## :arrow_forward: Como Executar 
