@@ -56,7 +56,7 @@ impl EstadoJogo {
             jogador_atual: "X".to_string(),
             terminou,
             jogador_vencedor: Some("".to_string()),
-            mensagem_vitoria: Some("a".to_string()),
+            mensagem_vitoria: Some("".to_string()),
         })
     }
 
