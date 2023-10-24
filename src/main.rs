@@ -16,6 +16,7 @@ struct EstadoJogo {
     posicao_bloco: Vec<Vec<na::Point2<f32>>>, // Matriz que armazena as posições dos blocos no jogo da velha (pontos bidimensionais: biblioteca nalgebra)
     conteudo_bloco: Vec<Vec<Option<String>>>, // Matriz com a descrição do conteúdo dos quadrados (X, O ou vazio).
     jogador_atual: String, // Jogador atual (X ou O).
+    terminou: bool,
 }
 
 impl EstadoJogo {
@@ -44,11 +45,14 @@ impl EstadoJogo {
             conteudo_bloco.push(linha_tempconteudo);
         }
 
+        let terminou = false;
+
         // Retorna o estado inicializado com o jogador atual como "X".
         Ok(EstadoJogo {
             posicao_bloco,
             conteudo_bloco,
             jogador_atual: "X".to_string(),
+            terminou,
         })
     }
 
@@ -156,7 +160,7 @@ impl EstadoJogo {
         None
     }
 
-    // Reinicia o jogo para um novo jogo vazio (X é o jogador inicial).
+    // Atualiza o estado do jogo para reiniciar o jogo vazio.
     fn reiniciar(&mut self) {
         for linha in 0..3 {
             for coluna in 0..3 {
@@ -164,6 +168,9 @@ impl EstadoJogo {
             }
         }
         self.jogador_atual = "X".to_string();
+
+        // Reinicia a variável "terminou" para falso.
+        self.terminou = false;
     }
 }
 
@@ -171,14 +178,27 @@ impl EstadoJogo {
 impl event::EventHandler for EstadoJogo {
     // Método chamado a cada atualização do jogo.
     fn update(&mut self, _: &mut Context) -> GameResult { // Verifica todas posições do tabuleiro para saber se algum jogador ganhou
+        if self.terminou {
+            // O jogo já terminou, não faz nada.
+            return Ok(());
+        }
+
         for linha in 0..3 {
             for coluna in 0..3 {
                 if self.verificar_vitoria(linha, coluna) {
                     println!("Jogador O venceu!");
-                    self.reiniciar();
+                    self.terminou = true;
+                    return Ok(());
                 }
             }
         }
+
+        // Se o jogo terminou em empate, defina a variável "terminou" como verdadeira.
+        if self.verificar_empate() {
+            println!("O jogo terminou em empate!");
+            self.terminou = true;
+        }
+        
         Ok(())
     }
 
@@ -256,6 +276,10 @@ impl event::EventHandler for EstadoJogo {
     // Esta função lida com eventos de clique do mouse no jogo da velha.
     fn mouse_button_down_event(&mut self, _ctx: &mut Context, button: event::MouseButton, x: f32, y: f32) {    
         if button == event::MouseButton::Left {
+            if self.terminou {
+                self.reiniciar();
+                return;
+            }
             // Chama a função verificar clique para determinar se o clique ocorreu em um quadrado válido.
             if let Some((mut linha, mut coluna)) = self.verificar_clique_quadrado(x, y) {
                 // Verifica se o quadrado clicado está vazio (sem marcação).
@@ -266,10 +290,9 @@ impl event::EventHandler for EstadoJogo {
                     // Verifica se o jogador atual venceu após fazer a marcação.
                     if self.verificar_vitoria(linha, coluna) {
                         // Se o jogador venceu, imprime uma mensagem de vitória.
-                        println!("Jogador {} venceu!", self.jogador_atual);
-    
-                        // Reinicia o jogo para um novo jogo vazio.
-                        self.reiniciar();
+                        println!("Jogador {} venceu!", self.jogador_atual); 
+                        self.terminou = true;
+                        
                     } else {
                         // Verifica se o jogo terminou em empate.
                         let empate = self.verificar_empate();
@@ -277,10 +300,8 @@ impl event::EventHandler for EstadoJogo {
                         if empate {
                             // Se o jogo terminou em empate, imprime uma mensagem de empate.
                             println!("O jogo terminou em empate!");
-    
-                            // Reinicia o jogo para um novo jogo vazio.
-                            self.reiniciar();
-
+                            self.terminou = true;
+                    
                         } else { //Jogo não terminou
                             // Vez do computador jogar.
                             self.jogador_atual = "O".to_string();
@@ -307,12 +328,13 @@ impl event::EventHandler for EstadoJogo {
                             let vitoria = self.verificar_vitoria(linha, coluna);
                             if vitoria {
                                 println!("Jogador {} venceu!", self.jogador_atual);
-                                //self.reiniciar();
+                                println!("Jogador {} venceu!", self.jogador_atual);
+                                self.terminou = true;
                             } else {
                                 let empate = self.verificar_empate();
                                 if empate {
                                     println!("O jogo terminou em empate!");
-                                    self.reiniciar();
+                                    self.terminou = true;
                                 } else {
                                     self.jogador_atual = "X".to_string();
                                 }
