@@ -17,6 +17,8 @@ struct EstadoJogo {
     conteudo_bloco: Vec<Vec<Option<String>>>, // Matriz com a descrição do conteúdo dos quadrados (X, O ou vazio).
     jogador_atual: String, // Jogador atual (X ou O).
     terminou: bool,
+    jogador_vencedor: Option<String>,
+    mensagem_vitoria: Option<String>,
 }
 
 impl EstadoJogo {
@@ -53,6 +55,8 @@ impl EstadoJogo {
             conteudo_bloco,
             jogador_atual: "X".to_string(),
             terminou,
+            jogador_vencedor: Some("".to_string()),
+            mensagem_vitoria: Some("a".to_string()),
         })
     }
 
@@ -171,6 +175,8 @@ impl EstadoJogo {
 
         // Reinicia a variável "terminou" para falso.
         self.terminou = false;
+        self.jogador_vencedor = Some("".to_string());
+        self.mensagem_vitoria = Some("".to_string());
     }
 }
 
@@ -186,7 +192,8 @@ impl event::EventHandler for EstadoJogo {
         for linha in 0..3 {
             for coluna in 0..3 {
                 if self.verificar_vitoria(linha, coluna) {
-                    println!("Jogador O venceu!");
+                    self.jogador_vencedor = Some("O".to_string());
+                    self.mensagem_vitoria = Some(format!("Jogador O venceu!"));
                     self.terminou = true;
                     return Ok(());
                 }
@@ -195,7 +202,7 @@ impl event::EventHandler for EstadoJogo {
 
         // Se o jogo terminou em empate, defina a variável "terminou" como verdadeira.
         if self.verificar_empate() {
-            println!("O jogo terminou em empate!");
+            self.mensagem_vitoria = Some("O jogo terminou em empate!".to_string());
             self.terminou = true;
         }
         
@@ -266,7 +273,20 @@ impl event::EventHandler for EstadoJogo {
     
         // Desenha o título na posição especificada.
         graphics::draw(ctx, &titulo_texto, parametro_desenho_titulo)?;
-    
+        
+        if let Some(mensagem) = &self.mensagem_vitoria {
+            // Exibe a mensagem de vitória na tela.
+            let mensagem_texto = graphics::Text::new(mensagem.clone());
+            let mensagem_posicao = na::Point2::new(60.0, 330.0); // Posição da mensagem de vitória.
+
+            let mut parametro_desenho_mensagem = graphics::DrawParam::default();
+            parametro_desenho_mensagem.dest.x = mensagem_posicao.x;
+            parametro_desenho_mensagem.dest.y = mensagem_posicao.y;
+            parametro_desenho_mensagem.color = graphics::BLACK;
+
+            graphics::draw(ctx, &mensagem_texto, parametro_desenho_mensagem)?;
+        }
+
         // Apresenta o que foi desenhado na tela.
         graphics::present(ctx)?;
         Ok(())
@@ -290,7 +310,8 @@ impl event::EventHandler for EstadoJogo {
                     // Verifica se o jogador atual venceu após fazer a marcação.
                     if self.verificar_vitoria(linha, coluna) {
                         // Se o jogador venceu, imprime uma mensagem de vitória.
-                        println!("Jogador {} venceu!", self.jogador_atual); 
+                        self.jogador_vencedor = Some(self.jogador_atual.clone());
+                        self.mensagem_vitoria = Some(format!("Jogador {} venceu!", self.jogador_atual));
                         self.terminou = true;
                         
                     } else {
@@ -299,7 +320,7 @@ impl event::EventHandler for EstadoJogo {
     
                         if empate {
                             // Se o jogo terminou em empate, imprime uma mensagem de empate.
-                            println!("O jogo terminou em empate!");
+                            self.mensagem_vitoria = Some("O jogo terminou em empate!".to_string());
                             self.terminou = true;
                     
                         } else { //Jogo não terminou
@@ -327,13 +348,13 @@ impl event::EventHandler for EstadoJogo {
                             // Verifica se o computador venceu ou empatou após fazer a marcação.
                             let vitoria = self.verificar_vitoria(linha, coluna);
                             if vitoria {
-                                println!("Jogador {} venceu!", self.jogador_atual);
-                                println!("Jogador {} venceu!", self.jogador_atual);
+                                self.jogador_vencedor = Some(self.jogador_atual.clone());
+                                self.mensagem_vitoria = Some(format!("Jogador {} venceu!", self.jogador_atual));
                                 self.terminou = true;
                             } else {
                                 let empate = self.verificar_empate();
                                 if empate {
-                                    println!("O jogo terminou em empate!");
+                                    self.mensagem_vitoria = Some("O jogo terminou em empate!".to_string());
                                     self.terminou = true;
                                 } else {
                                     self.jogador_atual = "X".to_string();
