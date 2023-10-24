@@ -1,5 +1,5 @@
 # Jogo da Velha em Rust com ggez  :video_game::older_woman:
-Este é um simples jogo da velha implementado em Rust usando a biblioteca ggez para a disciplina de Tópicos Especiais em Computação VII. O jogo permite que dois jogadores, representados como "X" e "O", joguem alternadamente em um tabuleiro 3x3 até que um jogador vença ou o jogo termine em empate.
+Este é um simples jogo da velha implementado em Rust usando a biblioteca ggez para a disciplina de Tópicos Especiais em Computação VII. O jogo permite um jogador ("X") jogue contra o computador ("O") em um tabuleiro 3x3 até que o jogador ou o computador vença ou o jogo termine em empate.
 
 ## :warning: Como Jogar 
 - O jogador "X" sempre começa.
