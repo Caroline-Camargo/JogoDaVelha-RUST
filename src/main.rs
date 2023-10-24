@@ -4,6 +4,8 @@ use ggez::event;
 use ggez::graphics; 
 use ggez::{Context, GameResult}; 
 use nalgebra as na;
+use rand::Rng;
+
 
 // Constantes que definem o tamanho dos quadrados do jogo da velha e o espaço entre eles.
 const LARGURA_QUADRADO: f32 = 80.0;
@@ -75,7 +77,7 @@ impl EstadoJogo {
             Some(jogador) => jogador,
             None => return false, // Retorna false se não houver marcação no bloco atual.
         };
-    
+        
         // Verifica se o jogador atual venceu na linha onde a última marcação foi feita.
         for i in 0..3 {
             if self.conteudo_bloco[linha][i].as_ref() != Some(jogador_atual) {
@@ -137,6 +139,23 @@ impl EstadoJogo {
         true
     }
 
+    fn verificar_vitoria_iminente(&mut self, jogador: &str) -> Option<(usize, usize)> {
+        // Verificar se o jogador pode ganhar na próxima jogada.
+        for linha in 0..3 {
+            for coluna in 0..3 {
+                if self.conteudo_bloco[linha][coluna].is_none() {
+                    self.conteudo_bloco[linha][coluna] = Some(jogador.to_string());
+                    if self.verificar_vitoria(linha, coluna) {
+                        self.conteudo_bloco[linha][coluna] = None;
+                        return Some((linha, coluna));
+                    }
+                    self.conteudo_bloco[linha][coluna] = None;
+                }
+            }
+        }
+        None
+    }
+
     // Reinicia o jogo para um novo jogo vazio (X é o jogador inicial).
     fn reiniciar(&mut self) {
         for linha in 0..3 {
@@ -155,6 +174,7 @@ impl event::EventHandler for EstadoJogo {
         for linha in 0..3 {
             for coluna in 0..3 {
                 if self.verificar_vitoria(linha, coluna) {
+                    println!("Jogador O venceu!");
                     self.reiniciar();
                 }
             }
@@ -235,14 +255,13 @@ impl event::EventHandler for EstadoJogo {
 
     // Esta função lida com eventos de clique do mouse no jogo da velha.
     fn mouse_button_down_event(&mut self, _ctx: &mut Context, button: event::MouseButton, x: f32, y: f32) {    
-        // Verifica se o botão pressionado foi o botão esquerdo do mouse.
         if button == event::MouseButton::Left {
             // Chama a função verificar clique para determinar se o clique ocorreu em um quadrado válido.
-            if let Some((linha, coluna)) = self.verificar_clique_quadrado(x, y) {
+            if let Some((mut linha, mut coluna)) = self.verificar_clique_quadrado(x, y) {
                 // Verifica se o quadrado clicado está vazio (sem marcação).
                 if self.conteudo_bloco[linha][coluna].is_none() {
                     // Marca o quadrado com o símbolo do jogador atual (X ou O).
-                    self.conteudo_bloco[linha][coluna] = Some(self.jogador_atual.clone());
+                    self.conteudo_bloco[linha][coluna] = Some("X".to_string());
     
                     // Verifica se o jogador atual venceu após fazer a marcação.
                     if self.verificar_vitoria(linha, coluna) {
@@ -261,9 +280,43 @@ impl event::EventHandler for EstadoJogo {
     
                             // Reinicia o jogo para um novo jogo vazio.
                             self.reiniciar();
-                        } else {
-                            // Alterna o jogador atual entre X e O.
-                            self.jogador_atual = if self.jogador_atual == "X" { "O".to_string() } else { "X".to_string() };
+
+                        } else { //Jogo não terminou
+                            // Vez do computador jogar.
+                            self.jogador_atual = "O".to_string();
+
+                            if let Some((linha, coluna)) = self.verificar_vitoria_iminente("O") {
+                                self.conteudo_bloco[linha][coluna] = Some("O".to_string());
+                            } else if let Some((linha, coluna)) = self.verificar_vitoria_iminente("X") {
+                                self.conteudo_bloco[linha][coluna] = Some("O".to_string());
+                            } else {
+                                // Jogada aleatória do Computador
+                                let mut rng = rand::thread_rng();
+                                loop {
+                                    linha = rng.gen_range(0..3);
+                                    coluna = rng.gen_range(0..3);
+
+                                    if self.conteudo_bloco[linha][coluna].is_none() {
+                                        self.conteudo_bloco[linha][coluna] = Some("O".to_string());
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Verifica se o computador venceu ou empatou após fazer a marcação.
+                            let vitoria = self.verificar_vitoria(linha, coluna);
+                            if vitoria {
+                                println!("Jogador {} venceu!", self.jogador_atual);
+                                //self.reiniciar();
+                            } else {
+                                let empate = self.verificar_empate();
+                                if empate {
+                                    println!("O jogo terminou em empate!");
+                                    self.reiniciar();
+                                } else {
+                                    self.jogador_atual = "X".to_string();
+                                }
+                            }
                         }
                     }
                 }
@@ -271,6 +324,7 @@ impl event::EventHandler for EstadoJogo {
         }
     }    
 }
+
 
 fn main() -> GameResult {
     // Calcula a largura e altura da tela com base nas constantes.
